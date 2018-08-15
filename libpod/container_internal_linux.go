@@ -215,8 +215,18 @@ func (c *Container) generateSpec(ctx context.Context) (*spec.Spec, error) {
 	g.AddAnnotation(crioAnnotations.Created, c.config.CreatedTime.Format(time.RFC3339Nano))
 	g.AddAnnotation("org.opencontainers.image.stopSignal", fmt.Sprintf("%d", c.config.StopSignal))
 
-	g.SetHostname(c.Hostname())
-	g.AddProcessEnv("HOSTNAME", g.Config.Hostname)
+	hostname := c.Hostname()
+	hasUts := false
+	for _, i :=range(c.config.Spec.Linux.Namespaces) {
+		if string(i.Type) == spec.UTSNamespace {
+			hasUts = true
+			break
+		}
+	}
+	if hasUts {
+		g.SetHostname(hostname)
+	}
+	g.AddProcessEnv("HOSTNAME", hostname)
 
 	// Only add container environment variable if not already present
 	foundContainerEnv := false

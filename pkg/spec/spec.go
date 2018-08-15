@@ -74,18 +74,21 @@ func CreateConfigToOCISpec(config *CreateConfig) (*spec.Spec, error) { //nolint
 		g.AddAnnotation(key, val)
 	}
 	g.SetRootReadonly(config.ReadOnlyRootfs)
-	if config.Hostname == "" {
+
+	hostnameEnv := config.Hostname
+	if hostnameEnv == "" {
 		if config.NetMode.IsHost() {
-			config.Hostname, err = os.Hostname()
+			hostnameEnv, err = os.Hostname()
 			if err != nil {
 				return nil, errors.Wrap(err, "unable to retrieve hostname")
 			}
 		}
 	}
-	g.SetHostname(config.Hostname)
-	if config.Hostname != "" {
-		g.AddProcessEnv("HOSTNAME", config.Hostname)
+	if config.Hostname == "" || !config.UtsMode.IsHost() {
+		g.SetHostname(config.Hostname)
 	}
+	g.AddProcessEnv("HOSTNAME", hostnameEnv)
+
 	for sysctlKey, sysctlVal := range config.Sysctl {
 		g.AddLinuxSysctl(sysctlKey, sysctlVal)
 	}
