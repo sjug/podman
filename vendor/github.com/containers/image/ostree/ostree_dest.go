@@ -26,6 +26,7 @@ import (
 	"github.com/containers/storage/pkg/archive"
 	"github.com/opencontainers/go-digest"
 	selinux "github.com/opencontainers/selinux/go-selinux"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/ostreedev/ostree-go/pkg/otbuiltin"
 	"github.com/pkg/errors"
 	"github.com/vbatts/tar-split/tar/asm"
@@ -133,6 +134,10 @@ func (d *ostreeImageDestination) IgnoresEmbeddedDockerReference() bool {
 }
 
 func (d *ostreeImageDestination) PutBlob(ctx context.Context, stream io.Reader, inputInfo types.BlobInfo, isConfig bool) (types.BlobInfo, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "putBlob")
+	span.SetTag("ref", "ostree")
+	defer span.Finish()
+
 	tmpDir, err := ioutil.TempDir(d.tmpDirPath, "blob")
 	if err != nil {
 		return types.BlobInfo{}, err
@@ -323,6 +328,9 @@ func (d *ostreeImageDestination) importConfig(repo *otbuiltin.Repo, blob *blobTo
 }
 
 func (d *ostreeImageDestination) HasBlob(ctx context.Context, info types.BlobInfo) (bool, int64, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "hasBlob")
+	span.SetTag("ref", "ostree")
+	defer span.Finish()
 
 	if d.repo == nil {
 		repo, err := openRepo(d.ref.repo)
@@ -402,6 +410,10 @@ func (d *ostreeImageDestination) PutSignatures(ctx context.Context, signatures [
 }
 
 func (d *ostreeImageDestination) Commit(ctx context.Context) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "commit")
+	span.SetTag("ref", "ostree")
+	defer span.Finish()
+
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
 

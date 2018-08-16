@@ -9,6 +9,7 @@ import (
 
 	"github.com/containers/image/types"
 	"github.com/opencontainers/go-digest"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
@@ -131,6 +132,10 @@ func (d *dirImageDestination) IgnoresEmbeddedDockerReference() bool {
 // to any other readers for download using the supplied digest.
 // If stream.Read() at any time, ESPECIALLY at end of input, returns an error, PutBlob MUST 1) fail, and 2) delete any data stored so far.
 func (d *dirImageDestination) PutBlob(ctx context.Context, stream io.Reader, inputInfo types.BlobInfo, isConfig bool) (types.BlobInfo, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "putBlob")
+	span.SetTag("ref", "directory")
+	defer span.Finish()
+
 	blobFile, err := ioutil.TempFile(d.ref.path, "dir-put-blob")
 	if err != nil {
 		return types.BlobInfo{}, err
@@ -174,6 +179,10 @@ func (d *dirImageDestination) PutBlob(ctx context.Context, stream io.Reader, inp
 // If the destination does not contain the blob, or it is unknown, HasBlob ordinarily returns (false, -1, nil);
 // it returns a non-nil error only on an unexpected failure.
 func (d *dirImageDestination) HasBlob(ctx context.Context, info types.BlobInfo) (bool, int64, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "hasBlob")
+	span.SetTag("ref", "directory")
+	defer span.Finish()
+
 	if info.Digest == "" {
 		return false, -1, errors.Errorf(`"Can not check for a blob with unknown digest`)
 	}

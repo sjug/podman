@@ -15,6 +15,7 @@ import (
 	"github.com/containers/image/pkg/compression"
 	"github.com/containers/image/types"
 	"github.com/opencontainers/go-digest"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 )
 
@@ -399,6 +400,10 @@ func (r uncompressedReadCloser) Close() error {
 
 // GetBlob returns a stream for the specified blob, and the blob’s size (or -1 if unknown).
 func (s *Source) GetBlob(ctx context.Context, info types.BlobInfo) (io.ReadCloser, int64, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "getBlob")
+	span.SetTag("ref", "docker-tarfile")
+	defer span.Finish()
+
 	if err := s.ensureCachedDataIsPresent(); err != nil {
 		return nil, 0, err
 	}

@@ -1,6 +1,7 @@
 package image
 
 import (
+	"context"
 	"io"
 	"strings"
 
@@ -9,6 +10,7 @@ import (
 	"github.com/containers/image/signature"
 	"github.com/containers/image/types"
 	"github.com/containers/storage"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 )
 
@@ -43,7 +45,10 @@ func findImageInRepotags(search imageParts, images []*Image) (*storage.Image, er
 }
 
 // getCopyOptions constructs a new containers/image/copy.Options{} struct from the given parameters, inheriting some from sc.
-func getCopyOptions(sc *types.SystemContext, reportWriter io.Writer, srcDockerRegistry, destDockerRegistry *DockerRegistryOptions, signing SigningOptions, manifestType string, additionalDockerArchiveTags []reference.NamedTagged) *cp.Options {
+func getCopyOptions(ctx context.Context, sc *types.SystemContext, reportWriter io.Writer, srcDockerRegistry, destDockerRegistry *DockerRegistryOptions, signing SigningOptions, manifestType string, additionalDockerArchiveTags []reference.NamedTagged) *cp.Options {
+	span, _ := opentracing.StartSpanFromContext(ctx, "getCopyOptions")
+	defer span.Finish()
+
 	if srcDockerRegistry == nil {
 		srcDockerRegistry = &DockerRegistryOptions{}
 	}
@@ -63,8 +68,11 @@ func getCopyOptions(sc *types.SystemContext, reportWriter io.Writer, srcDockerRe
 }
 
 // getPolicyContext sets up, initializes and returns a new context for the specified policy
-func getPolicyContext(ctx *types.SystemContext) (*signature.PolicyContext, error) {
-	policy, err := signature.DefaultPolicy(ctx)
+func getPolicyContext(c context.Context, sc *types.SystemContext) (*signature.PolicyContext, error) {
+	span, _ := opentracing.StartSpanFromContext(c, "getPolicyContext")
+	defer span.Finish()
+
+	policy, err := signature.DefaultPolicy(sc)
 	if err != nil {
 		return nil, err
 	}

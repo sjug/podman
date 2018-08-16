@@ -190,7 +190,7 @@ func getRegistriesAndSkipTLS(c *cli.Context, registry string) (map[string]bool, 
 		}
 		// if the user didn't allow nor disallow insecure registries, check to see if the registry is insecure
 		if !forceSecure {
-			insecureRegistries, err := sysreg.GetInsecureRegistries()
+			insecureRegistries, err := sysreg.GetInsecureRegistries(c.Ctx)
 			if err != nil {
 				return nil, errors.Wrapf(err, "error getting insecure registries to search")
 			}

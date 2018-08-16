@@ -1,6 +1,7 @@
 package libpod
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -745,7 +746,7 @@ func (r *Runtime) Info() ([]InfoData, error) {
 	registries["registries"] = reg
 	info = append(info, InfoData{Type: "registries", Data: registries})
 
-	i, err := sysreg.GetInsecureRegistries()
+	i, err := sysreg.GetInsecureRegistries(context.Background())
 	if err != nil {
 		return nil, errors.Wrapf(err, "error getting registries")
 	}

@@ -16,6 +16,7 @@ import (
 	"github.com/containers/image/types"
 	"github.com/docker/distribution/registry/client"
 	"github.com/opencontainers/go-digest"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
@@ -163,6 +164,10 @@ func getBlobSize(resp *http.Response) int64 {
 
 // GetBlob returns a stream for the specified blob, and the blob’s size (or -1 if unknown).
 func (s *dockerImageSource) GetBlob(ctx context.Context, info types.BlobInfo) (io.ReadCloser, int64, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "getBlob")
+	span.SetTag("ref", "docker")
+	defer span.Finish()
+
 	if len(info.URLs) != 0 {
 		return s.getExternalBlob(ctx, info.URLs)
 	}

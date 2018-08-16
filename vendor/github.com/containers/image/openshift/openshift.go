@@ -18,6 +18,7 @@ import (
 	"github.com/containers/image/types"
 	"github.com/containers/image/version"
 	"github.com/opencontainers/go-digest"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
@@ -213,6 +214,10 @@ func (s *openshiftImageSource) GetManifest(ctx context.Context, instanceDigest *
 
 // GetBlob returns a stream for the specified blob, and the blob’s size (or -1 if unknown).
 func (s *openshiftImageSource) GetBlob(ctx context.Context, info types.BlobInfo) (io.ReadCloser, int64, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "getBlob")
+	span.SetTag("ref", "openshift")
+	defer span.Finish()
+
 	if err := s.ensureImageIsResolved(ctx); err != nil {
 		return nil, 0, err
 	}
@@ -383,6 +388,10 @@ func (d *openshiftImageDestination) IgnoresEmbeddedDockerReference() bool {
 // to any other readers for download using the supplied digest.
 // If stream.Read() at any time, ESPECIALLY at end of input, returns an error, PutBlob MUST 1) fail, and 2) delete any data stored so far.
 func (d *openshiftImageDestination) PutBlob(ctx context.Context, stream io.Reader, inputInfo types.BlobInfo, isConfig bool) (types.BlobInfo, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "putBlob")
+	span.SetTag("ref", "openshift")
+	defer span.Finish()
+
 	return d.docker.PutBlob(ctx, stream, inputInfo, isConfig)
 }
 
@@ -391,10 +400,18 @@ func (d *openshiftImageDestination) PutBlob(ctx context.Context, stream io.Reade
 // If the destination does not contain the blob, or it is unknown, HasBlob ordinarily returns (false, -1, nil);
 // it returns a non-nil error only on an unexpected failure.
 func (d *openshiftImageDestination) HasBlob(ctx context.Context, info types.BlobInfo) (bool, int64, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "hasBlob")
+	span.SetTag("ref", "openshift")
+	defer span.Finish()
+
 	return d.docker.HasBlob(ctx, info)
 }
 
 func (d *openshiftImageDestination) ReapplyBlob(ctx context.Context, info types.BlobInfo) (types.BlobInfo, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "reapplyBlob")
+	span.SetTag("ref", "openshift")
+	defer span.Finish()
+
 	return d.docker.ReapplyBlob(ctx, info)
 }
 
@@ -478,6 +495,10 @@ sigExists:
 // - Uploaded data MAY be visible to others before Commit() is called
 // - Uploaded data MAY be removed or MAY remain around if Close() is called without Commit() (i.e. rollback is allowed but not guaranteed)
 func (d *openshiftImageDestination) Commit(ctx context.Context) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "commit")
+	span.SetTag("ref", "openshift")
+	defer span.Finish()
+
 	return d.docker.Commit(ctx)
 }
 

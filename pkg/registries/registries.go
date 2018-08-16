@@ -1,12 +1,14 @@
 package registries
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 
 	"github.com/containers/image/pkg/sysregistries"
 	"github.com/containers/image/types"
 	"github.com/containers/libpod/pkg/rootless"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 )
 
@@ -35,8 +37,10 @@ func GetRegistries() ([]string, error) {
 }
 
 // GetInsecureRegistries obtains the list of insecure registries from the global registration file.
-func GetInsecureRegistries() ([]string, error) {
+func GetInsecureRegistries(ctx context.Context) ([]string, error) {
 	registryConfigPath := ""
+	span, _ := opentracing.StartSpanFromContext(ctx, "getInsecureRegistries")
+	defer span.Finish()
 
 	if _, err := os.Stat(userRegistriesFile); err == nil {
 		registryConfigPath = userRegistriesFile
