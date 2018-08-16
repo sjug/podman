@@ -27,6 +27,7 @@ import (
 	"github.com/containers/storage/pkg/reexec"
 	"github.com/opencontainers/go-digest"
 	ociv1 "github.com/opencontainers/image-spec/specs-go/v1"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
@@ -126,6 +127,8 @@ func (ir *Runtime) NewFromLocal(name string) (*Image, error) {
 // New creates a new image object where the image could be local
 // or remote
 func (ir *Runtime) New(ctx context.Context, name, signaturePolicyPath, authfile string, writer io.Writer, dockeroptions *DockerRegistryOptions, signingoptions SigningOptions, forcePull, forceSecure bool) (*Image, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "new-image")
+	defer span.Finish()
 	// We don't know if the image is local or not ... check local first
 	newImage := Image{
 		InputName:    name,
@@ -523,7 +526,7 @@ func (i *Image) PushImageToHeuristicDestination(ctx context.Context, destination
 func (i *Image) PushImageToReference(ctx context.Context, dest types.ImageReference, manifestMIMEType, authFile, signaturePolicyPath string, writer io.Writer, forceCompress bool, signingOptions SigningOptions, dockerRegistryOptions *DockerRegistryOptions, forceSecure bool, additionalDockerArchiveTags []reference.NamedTagged) error {
 	sc := GetSystemContext(signaturePolicyPath, authFile, forceCompress)
 
-	policyContext, err := getPolicyContext(sc)
+	policyContext, err := getPolicyContext(ctx, sc)
 	if err != nil {
 		return err
 	}
@@ -534,11 +537,11 @@ func (i *Image) PushImageToReference(ctx context.Context, dest types.ImageRefere
 	if err != nil {
 		return errors.Wrapf(err, "error getting source imageReference for %q", i.InputName)
 	}
-	insecureRegistries, err := registries.GetInsecureRegistries()
+	insecureRegistries, err := registries.GetInsecureRegistries(ctx)
 	if err != nil {
 		return err
 	}
-	copyOptions := getCopyOptions(sc, writer, nil, dockerRegistryOptions, signingOptions, manifestMIMEType, additionalDockerArchiveTags)
+	copyOptions := getCopyOptions(ctx, sc, writer, nil, dockerRegistryOptions, signingOptions, manifestMIMEType, additionalDockerArchiveTags)
 	if dest.Transport().Name() == DockerTransport {
 		imgRef := dest.DockerReference()
 		if imgRef == nil { // This should never happen; such references can’t be created.
@@ -902,12 +905,12 @@ func (ir *Runtime) Import(ctx context.Context, path, reference string, writer io
 			return nil, err
 		}
 	}
-	policyContext, err := getPolicyContext(sc)
+	policyContext, err := getPolicyContext(ctx, sc)
 	if err != nil {
 		return nil, err
 	}
 	defer policyContext.Destroy()
-	copyOptions := getCopyOptions(sc, writer, nil, nil, signingOptions, "", nil)
+	copyOptions := getCopyOptions(ctx, sc, writer, nil, nil, signingOptions, "", nil)
 	dest, err := is.Transport.ParseStoreReference(ir.store, reference)
 	if err != nil {
 		errors.Wrapf(err, "error getting image reference for %q", reference)

@@ -15,6 +15,7 @@ import (
 	"github.com/containers/libpod/pkg/util"
 	"github.com/cri-o/ocicni/pkg/ocicni"
 	"github.com/docker/go-units"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
@@ -201,6 +202,9 @@ var (
 )
 
 func psCmd(c *cli.Context) error {
+	span, _ := opentracing.StartSpanFromContext(c.Ctx, "psCmd")
+	defer span.Finish()
+
 	if err := validateFlags(c, psFlags); err != nil {
 		return err
 	}

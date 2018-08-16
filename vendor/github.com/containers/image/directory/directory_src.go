@@ -9,6 +9,7 @@ import (
 	"github.com/containers/image/manifest"
 	"github.com/containers/image/types"
 	"github.com/opencontainers/go-digest"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 )
 
@@ -50,6 +51,10 @@ func (s *dirImageSource) GetManifest(ctx context.Context, instanceDigest *digest
 
 // GetBlob returns a stream for the specified blob, and the blob’s size (or -1 if unknown).
 func (s *dirImageSource) GetBlob(ctx context.Context, info types.BlobInfo) (io.ReadCloser, int64, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "getBlob")
+	span.SetTag("ref", "directory")
+	defer span.Finish()
+
 	r, err := os.Open(s.ref.layerPath(info.Digest))
 	if err != nil {
 		return nil, -1, err

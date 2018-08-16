@@ -14,6 +14,7 @@ import (
 	digest "github.com/opencontainers/go-digest"
 	imgspec "github.com/opencontainers/image-spec/specs-go"
 	imgspecv1 "github.com/opencontainers/image-spec/specs-go/v1"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 )
 
@@ -114,6 +115,10 @@ func (d *ociImageDestination) IgnoresEmbeddedDockerReference() bool {
 // to any other readers for download using the supplied digest.
 // If stream.Read() at any time, ESPECIALLY at end of input, returns an error, PutBlob MUST 1) fail, and 2) delete any data stored so far.
 func (d *ociImageDestination) PutBlob(ctx context.Context, stream io.Reader, inputInfo types.BlobInfo, isConfig bool) (types.BlobInfo, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "putBlob")
+	span.SetTag("ref", "oci-layout")
+	defer span.Finish()
+
 	blobFile, err := ioutil.TempFile(d.ref.dir, "oci-put-blob")
 	if err != nil {
 		return types.BlobInfo{}, err
@@ -178,6 +183,10 @@ func (d *ociImageDestination) PutBlob(ctx context.Context, stream io.Reader, inp
 // If the destination does not contain the blob, or it is unknown, HasBlob ordinarily returns (false, -1, nil);
 // it returns a non-nil error only on an unexpected failure.
 func (d *ociImageDestination) HasBlob(ctx context.Context, info types.BlobInfo) (bool, int64, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "hasBlob")
+	span.SetTag("ref", "oci-layout")
+	defer span.Finish()
+
 	if info.Digest == "" {
 		return false, -1, errors.Errorf(`"Can not check for a blob with unknown digest`)
 	}
@@ -262,6 +271,10 @@ func (d *ociImageDestination) PutSignatures(ctx context.Context, signatures [][]
 // - Uploaded data MAY be visible to others before Commit() is called
 // - Uploaded data MAY be removed or MAY remain around if Close() is called without Commit() (i.e. rollback is allowed but not guaranteed)
 func (d *ociImageDestination) Commit(ctx context.Context) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "commit")
+	span.SetTag("ref", "oci-layout")
+	defer span.Finish()
+
 	if err := ioutil.WriteFile(d.ref.ociLayoutPath(), []byte(`{"imageLayoutVersion": "1.0.0"}`), 0644); err != nil {
 		return err
 	}

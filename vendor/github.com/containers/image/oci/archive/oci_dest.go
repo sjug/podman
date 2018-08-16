@@ -7,6 +7,7 @@ import (
 
 	"github.com/containers/image/types"
 	"github.com/containers/storage/pkg/archive"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 )
 
@@ -81,15 +82,27 @@ func (d *ociArchiveImageDestination) IgnoresEmbeddedDockerReference() bool {
 // inputInfo.Digest can be optionally provided if known; it is not mandatory for the implementation to verify it.
 // inputInfo.Size is the expected length of stream, if known.
 func (d *ociArchiveImageDestination) PutBlob(ctx context.Context, stream io.Reader, inputInfo types.BlobInfo, isConfig bool) (types.BlobInfo, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "putBlob")
+	span.SetTag("ref", "oci-archive")
+	defer span.Finish()
+
 	return d.unpackedDest.PutBlob(ctx, stream, inputInfo, isConfig)
 }
 
 // HasBlob returns true iff the image destination already contains a blob with the matching digest which can be reapplied using ReapplyBlob
 func (d *ociArchiveImageDestination) HasBlob(ctx context.Context, info types.BlobInfo) (bool, int64, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "hasBlob")
+	span.SetTag("ref", "oci-archive")
+	defer span.Finish()
+
 	return d.unpackedDest.HasBlob(ctx, info)
 }
 
 func (d *ociArchiveImageDestination) ReapplyBlob(ctx context.Context, info types.BlobInfo) (types.BlobInfo, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "reapplyBlob")
+	span.SetTag("ref", "oci-archive")
+	defer span.Finish()
+
 	return d.unpackedDest.ReapplyBlob(ctx, info)
 }
 

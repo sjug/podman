@@ -8,6 +8,7 @@ import (
 	"github.com/containers/image/types"
 	digest "github.com/opencontainers/go-digest"
 	imgspecv1 "github.com/opencontainers/image-spec/specs-go/v1"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 )
 
@@ -78,6 +79,10 @@ func (s *ociArchiveImageSource) GetManifest(ctx context.Context, instanceDigest 
 
 // GetBlob returns a stream for the specified blob, and the blob's size.
 func (s *ociArchiveImageSource) GetBlob(ctx context.Context, info types.BlobInfo) (io.ReadCloser, int64, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "hasBlob")
+	span.SetTag("ref", "oci-archive")
+	defer span.Finish()
+
 	return s.unpackedSrc.GetBlob(ctx, info)
 }
 

@@ -22,6 +22,7 @@ import (
 	"github.com/containers/storage/pkg/ioutils"
 	digest "github.com/opencontainers/go-digest"
 	imgspecv1 "github.com/opencontainers/image-spec/specs-go/v1"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
@@ -101,6 +102,10 @@ func (s storageImageSource) Close() error {
 
 // GetBlob reads the data blob or filesystem layer which matches the digest and size, if given.
 func (s *storageImageSource) GetBlob(ctx context.Context, info types.BlobInfo) (rc io.ReadCloser, n int64, err error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "getBlob")
+	span.SetTag("ref", "storage")
+	defer span.Finish()
+
 	if info.Digest == image.GzippedEmptyLayerDigest {
 		return ioutil.NopCloser(bytes.NewReader(image.GzippedEmptyLayer)), int64(len(image.GzippedEmptyLayer)), nil
 	}
@@ -177,6 +182,10 @@ func (s *storageImageSource) GetManifest(ctx context.Context, instanceDigest *di
 // LayerInfosForCopy() returns the list of layer blobs that make up the root filesystem of
 // the image, after they've been decompressed.
 func (s *storageImageSource) LayerInfosForCopy(ctx context.Context) ([]types.BlobInfo, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "layersInfosForCopy")
+	span.SetTag("ref", "storage")
+	defer span.Finish()
+
 	manifestBlob, manifestType, err := s.GetManifest(ctx, nil)
 	if err != nil {
 		return nil, errors.Wrapf(err, "error reading image manifest for %q", s.image.ID)
@@ -320,6 +329,10 @@ func (s *storageImageDestination) computeNextBlobCacheFile() string {
 // PutBlob stores a layer or data blob in our temporary directory, checking that any information
 // in the blobinfo matches the incoming data.
 func (s *storageImageDestination) PutBlob(ctx context.Context, stream io.Reader, blobinfo types.BlobInfo, isConfig bool) (types.BlobInfo, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "putBlob")
+	span.SetTag("ref", "storage")
+	defer span.Finish()
+
 	errorBlobInfo := types.BlobInfo{
 		Digest: "",
 		Size:   -1,
@@ -384,6 +397,10 @@ func (s *storageImageDestination) PutBlob(ctx context.Context, stream io.Reader,
 // If the destination does not contain the blob, or it is unknown, HasBlob ordinarily returns (false, -1, nil);
 // it returns a non-nil error only on an unexpected failure.
 func (s *storageImageDestination) HasBlob(ctx context.Context, blobinfo types.BlobInfo) (bool, int64, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "hasBlob")
+	span.SetTag("ref", "storage")
+	defer span.Finish()
+
 	if blobinfo.Digest == "" {
 		return false, -1, errors.Errorf(`Can not check for a blob with unknown digest`)
 	}
@@ -421,6 +438,10 @@ func (s *storageImageDestination) HasBlob(ctx context.Context, blobinfo types.Bl
 // ReapplyBlob is now a no-op, assuming HasBlob() says we already have it, since Commit() can just apply the
 // same one when it walks the list in the manifest.
 func (s *storageImageDestination) ReapplyBlob(ctx context.Context, blobinfo types.BlobInfo) (types.BlobInfo, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "reapplyBlob")
+	span.SetTag("ref", "storage")
+	defer span.Finish()
+
 	present, size, err := s.HasBlob(ctx, blobinfo)
 	if !present {
 		return types.BlobInfo{}, errors.Errorf("error reapplying blob %+v: blob was not previously applied", blobinfo)
@@ -492,6 +513,10 @@ func (s *storageImageDestination) getConfigBlob(info types.BlobInfo) ([]byte, er
 }
 
 func (s *storageImageDestination) Commit(ctx context.Context) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "commit")
+	span.SetTag("ref", "storage")
+	defer span.Finish()
+
 	// Find the list of layer blobs.
 	if len(s.manifest) == 0 {
 		return errors.New("Internal error: storageImageDestination.Commit() called without PutManifest()")

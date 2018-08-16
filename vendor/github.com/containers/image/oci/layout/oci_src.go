@@ -13,6 +13,7 @@ import (
 	"github.com/docker/go-connections/tlsconfig"
 	"github.com/opencontainers/go-digest"
 	imgspecv1 "github.com/opencontainers/image-spec/specs-go/v1"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 )
 
@@ -94,6 +95,10 @@ func (s *ociImageSource) GetManifest(ctx context.Context, instanceDigest *digest
 
 // GetBlob returns a stream for the specified blob, and the blob's size.
 func (s *ociImageSource) GetBlob(ctx context.Context, info types.BlobInfo) (io.ReadCloser, int64, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "getBlob")
+	span.SetTag("ref", "oci-layout")
+	defer span.Finish()
+
 	if len(info.URLs) != 0 {
 		return s.getExternalBlob(ctx, info.URLs)
 	}

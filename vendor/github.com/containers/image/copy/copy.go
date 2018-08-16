@@ -18,6 +18,7 @@ import (
 	"github.com/containers/image/transports"
 	"github.com/containers/image/types"
 	"github.com/opencontainers/go-digest"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	pb "gopkg.in/cheggaaa/pb.v1"
@@ -104,6 +105,8 @@ type Options struct {
 // Image copies image from srcRef to destRef, using policyContext to validate
 // source image admissibility.
 func Image(ctx context.Context, policyContext *signature.PolicyContext, destRef, srcRef types.ImageReference, options *Options) (retErr error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "copy-image")
+	defer span.Finish()
 	// NOTE this function uses an output parameter for the error return value.
 	// Setting this and returning is the ideal way to return an error.
 	//
@@ -184,6 +187,9 @@ func Image(ctx context.Context, policyContext *signature.PolicyContext, destRef,
 // Image copies a single (on-manifest-list) image unparsedImage, using policyContext to validate
 // source image admissibility.
 func (c *copier) copyOneImage(ctx context.Context, policyContext *signature.PolicyContext, options *Options, unparsedImage *image.UnparsedImage) (retErr error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "copyOneImage")
+	defer span.Finish()
+
 	// The caller is handling manifest lists; this could happen only if a manifest list contains a manifest list.
 	// Make sure we fail cleanly in such cases.
 	multiImage, err := isMultiImage(ctx, unparsedImage)
@@ -324,6 +330,9 @@ func (c *copier) Printf(format string, a ...interface{}) {
 }
 
 func checkImageDestinationForCurrentRuntimeOS(ctx context.Context, sys *types.SystemContext, src types.Image, dest types.ImageDestination) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "checkImageDestinationForRuntime")
+	defer span.Finish()
+
 	if dest.MustMatchRuntimeOS() {
 		wantedOS := runtime.GOOS
 		if sys != nil && sys.OSChoice != "" {
@@ -366,6 +375,9 @@ func (ic *imageCopier) updateEmbeddedDockerReference() error {
 
 // copyLayers copies layers from ic.src/ic.c.rawSource to dest, using and updating ic.manifestUpdates if necessary and ic.canModifyManifest.
 func (ic *imageCopier) copyLayers(ctx context.Context) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "copyLayers")
+	defer span.Finish()
+
 	srcInfos := ic.src.LayerInfos()
 	destInfos := []types.BlobInfo{}
 	diffIDs := []digest.Digest{}
@@ -431,6 +443,9 @@ func layerDigestsDiffer(a, b []types.BlobInfo) bool {
 // copyUpdatedConfigAndManifest updates the image per ic.manifestUpdates, if necessary,
 // stores the resulting config and manifest to the destination, and returns the stored manifest.
 func (ic *imageCopier) copyUpdatedConfigAndManifest(ctx context.Context) ([]byte, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "copyUpdatedConfigAndManifest")
+	defer span.Finish()
+
 	pendingImage := ic.src
 	if !reflect.DeepEqual(*ic.manifestUpdates, types.ManifestUpdateOptions{InformationOnly: ic.manifestUpdates.InformationOnly}) {
 		if !ic.canModifyManifest {
@@ -497,6 +512,9 @@ type diffIDResult struct {
 // copyLayer copies a layer with srcInfo (with known Digest and possibly known Size) in src to dest, perhaps compressing it if canCompress,
 // and returns a complete blobInfo of the copied layer, and a value for LayerDiffIDs if diffIDIsNeeded
 func (ic *imageCopier) copyLayer(ctx context.Context, srcInfo types.BlobInfo) (types.BlobInfo, digest.Digest, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "copyLayer")
+	defer span.Finish()
+
 	// Check if we already have a blob with this digest
 	haveBlob, extantBlobSize, err := ic.c.dest.HasBlob(ctx, srcInfo)
 	if err != nil {
@@ -556,6 +574,9 @@ func (ic *imageCopier) copyLayer(ctx context.Context, srcInfo types.BlobInfo) (t
 // and returns a complete blobInfo of the copied blob and perhaps a <-chan diffIDResult if diffIDIsNeeded, to be read by the caller.
 func (ic *imageCopier) copyLayerFromStream(ctx context.Context, srcStream io.Reader, srcInfo types.BlobInfo,
 	diffIDIsNeeded bool) (types.BlobInfo, <-chan diffIDResult, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "copyLayerFromStream")
+	defer span.Finish()
+
 	var getDiffIDRecorder func(compression.DecompressorFunc) io.Writer // = nil
 	var diffIDChan chan diffIDResult
 
@@ -617,6 +638,8 @@ func computeDiffID(stream io.Reader, decompressor compression.DecompressorFunc) 
 func (c *copier) copyBlobFromStream(ctx context.Context, srcStream io.Reader, srcInfo types.BlobInfo,
 	getOriginalLayerCopyWriter func(decompressor compression.DecompressorFunc) io.Writer,
 	canModifyBlob bool, isConfig bool) (types.BlobInfo, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "copyBlobFromStream")
+	defer span.Finish()
 	// The copying happens through a pipeline of connected io.Readers.
 	// === Input: srcStream
 

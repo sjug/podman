@@ -21,6 +21,7 @@ import (
 	"github.com/containers/libpod/pkg/registries"
 	"github.com/containers/libpod/pkg/util"
 	multierror "github.com/hashicorp/go-multierror"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
@@ -109,6 +110,9 @@ func (ir *Runtime) getSinglePullRefPairGoal(srcRef types.ImageReference, destNam
 
 // pullGoalFromImageReference returns a pull goal for a single ImageReference, depending on the used transport.
 func (ir *Runtime) pullGoalFromImageReference(ctx context.Context, srcRef types.ImageReference, imgName string, sc *types.SystemContext) (*pullGoal, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "pullImageFromImageReference")
+	defer span.Finish()
+
 	// supports pulling from docker-archive, oci, and registries
 	switch srcRef.Transport().Name() {
 	case DockerArchive:
@@ -195,11 +199,14 @@ func (ir *Runtime) pullGoalFromImageReference(ctx context.Context, srcRef types.
 // Use pullImageFromReference if the source is known precisely.
 func (ir *Runtime) pullImageFromHeuristicSource(ctx context.Context, inputName string, writer io.Writer, authfile, signaturePolicyPath string, signingOptions SigningOptions, dockerOptions *DockerRegistryOptions, forceSecure bool) ([]string, error) {
 	var goal *pullGoal
+	span, _ := opentracing.StartSpanFromContext(ctx, "pullImageFromHeuristicSource")
+	defer span.Finish()
+
 	sc := GetSystemContext(signaturePolicyPath, authfile, false)
 	srcRef, err := alltransports.ParseImageName(inputName)
 	if err != nil {
 		// could be trying to pull from registry with short name
-		goal, err = ir.pullGoalFromPossiblyUnqualifiedName(inputName)
+		goal, err = ir.pullGoalFromPossiblyUnqualifiedName(ctx, inputName)
 		if err != nil {
 			return nil, errors.Wrap(err, "error getting default registries to try")
 		}
@@ -224,20 +231,23 @@ func (ir *Runtime) pullImageFromReference(ctx context.Context, srcRef types.Imag
 
 // doPullImage is an internal helper interpreting pullGoal. Almost everyone should call one of the callers of doPullImage instead.
 func (ir *Runtime) doPullImage(ctx context.Context, sc *types.SystemContext, goal pullGoal, writer io.Writer, signingOptions SigningOptions, dockerOptions *DockerRegistryOptions, forceSecure bool) ([]string, error) {
-	policyContext, err := getPolicyContext(sc)
+	span, _ := opentracing.StartSpanFromContext(ctx, "doPullImage")
+	defer span.Finish()
+
+	policyContext, err := getPolicyContext(ctx, sc)
 	if err != nil {
 		return nil, err
 	}
 	defer policyContext.Destroy()
 
-	insecureRegistries, err := registries.GetInsecureRegistries()
+	insecureRegistries, err := registries.GetInsecureRegistries(ctx)
 	if err != nil {
 		return nil, err
 	}
 	var images []string
 	var pullErrors *multierror.Error
 	for _, imageInfo := range goal.refPairs {
-		copyOptions := getCopyOptions(sc, writer, dockerOptions, nil, signingOptions, "", nil)
+		copyOptions := getCopyOptions(ctx, sc, writer, dockerOptions, nil, signingOptions, "", nil)
 		if imageInfo.srcRef.Transport().Name() == DockerTransport {
 			imgRef := imageInfo.srcRef.DockerReference()
 			if imgRef == nil { // This should never happen; such references can’t be created.
@@ -294,7 +304,9 @@ func hasShaInInputName(inputName string) bool {
 
 // pullGoalFromPossiblyUnqualifiedName looks at inputName and determines the possible
 // image references to try pulling in combination with the registries.conf file as well
-func (ir *Runtime) pullGoalFromPossiblyUnqualifiedName(inputName string) (*pullGoal, error) {
+func (ir *Runtime) pullGoalFromPossiblyUnqualifiedName(ctx context.Context, inputName string) (*pullGoal, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "pullGoalFromPossiblyUnqualifiedName")
+	defer span.Finish()
 	decomposedImage, err := decompose(inputName)
 	if err != nil {
 		return nil, err

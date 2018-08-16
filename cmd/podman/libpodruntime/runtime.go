@@ -9,12 +9,16 @@ import (
 	"github.com/containers/libpod/pkg/rootless"
 	"github.com/containers/libpod/pkg/util"
 	"github.com/containers/storage"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"github.com/urfave/cli"
 )
 
 // GetRuntime generates a new libpod runtime configured by command line options
 func GetRuntime(c *cli.Context) (*libpod.Runtime, error) {
+	span, _ := opentracing.StartSpanFromContext(c.Ctx, "GetRuntime")
+	defer span.Finish()
+
 	storageOpts, err := GetDefaultStoreOptions()
 	if err != nil {
 		return nil, err

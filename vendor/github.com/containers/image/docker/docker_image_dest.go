@@ -21,6 +21,7 @@ import (
 	"github.com/docker/distribution/registry/client"
 	"github.com/opencontainers/go-digest"
 	imgspecv1 "github.com/opencontainers/image-spec/specs-go/v1"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
@@ -117,6 +118,10 @@ func (c *sizeCounter) Write(p []byte) (n int, err error) {
 // to any other readers for download using the supplied digest.
 // If stream.Read() at any time, ESPECIALLY at end of input, returns an error, PutBlob MUST 1) fail, and 2) delete any data stored so far.
 func (d *dockerImageDestination) PutBlob(ctx context.Context, stream io.Reader, inputInfo types.BlobInfo, isConfig bool) (types.BlobInfo, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "putBlob")
+	span.SetTag("ref", "docker")
+	defer span.Finish()
+
 	if inputInfo.Digest.String() != "" {
 		haveBlob, size, err := d.HasBlob(ctx, inputInfo)
 		if err != nil {
@@ -185,6 +190,10 @@ func (d *dockerImageDestination) PutBlob(ctx context.Context, stream io.Reader, 
 // If the destination does not contain the blob, or it is unknown, HasBlob ordinarily returns (false, -1, nil);
 // it returns a non-nil error only on an unexpected failure.
 func (d *dockerImageDestination) HasBlob(ctx context.Context, info types.BlobInfo) (bool, int64, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "hasBlob")
+	span.SetTag("ref", "docker")
+	defer span.Finish()
+
 	if info.Digest == "" {
 		return false, -1, errors.Errorf(`"Can not check for a blob with unknown digest`)
 	}

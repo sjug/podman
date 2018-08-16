@@ -8,6 +8,10 @@ import (
 	"path/filepath"
 	"sort"
 	"time"
+
+	opentracing "github.com/opentracing/opentracing-go"
+	jaeger "github.com/uber/jaeger-client-go"
+	config "github.com/uber/jaeger-client-go/config"
 )
 
 var (
@@ -173,6 +177,24 @@ func (a *App) Setup() {
 	}
 }
 
+// initJaeger returns an instance of Jaeger Tracer that samples 100% of traces and logs all spans to stdout.
+func initJaeger(service string) (opentracing.Tracer, io.Closer) {
+	cfg := &config.Configuration{
+		Sampler: &config.SamplerConfig{
+			Type:  "const",
+			Param: 1,
+		},
+		Reporter: &config.ReporterConfig{
+			LogSpans: true,
+		},
+	}
+	tracer, closer, err := cfg.New(service, config.Logger(jaeger.StdLogger))
+	if err != nil {
+		panic(fmt.Sprintf("ERROR: cannot init Jaeger: %v\n", err))
+	}
+	return tracer, closer
+}
+
 // Run is the entry point to the cli app. Parses the arguments slice and routes
 // to the proper flag/args combination
 func (a *App) Run(arguments []string) (err error) {
@@ -202,6 +224,10 @@ func (a *App) Run(arguments []string) (err error) {
 		return nerr
 	}
 	context.shellComplete = shellComplete
+
+	tracer, closer := initJaeger("run")
+	defer closer.Close()
+	opentracing.SetGlobalTracer(tracer)
 
 	if checkCompletions(context) {
 		return nil
@@ -254,8 +280,15 @@ func (a *App) Run(arguments []string) (err error) {
 	args := context.Args()
 	if args.Present() {
 		name := args.First()
+		span := tracer.StartSpan("run-context")
+		span.SetTag("command", name)
+		defer span.Finish()
+
+		context.Ctx = opentracing.ContextWithSpan(context.Ctx, span)
+
 		c := a.Command(name)
 		if c != nil {
+			fmt.Println("Command = nil")
 			return c.Run(context)
 		}
 	}

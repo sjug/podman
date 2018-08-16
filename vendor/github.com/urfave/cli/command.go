@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"sort"
 	"strings"
+
+	opentracing "github.com/opentracing/opentracing-go"
 )
 
 // Command is a subcommand for a cli.App.
@@ -99,7 +101,11 @@ type Commands []Command
 
 // Run invokes the command given the context, parses ctx.Args() to generate command-specific flags
 func (c Command) Run(ctx *Context) (err error) {
+	span, _ := opentracing.StartSpanFromContext(ctx.Ctx, "inner-run")
+	defer span.Finish()
+
 	if len(c.Subcommands) > 0 {
+		fmt.Println("call startapp ctx")
 		return c.startApp(ctx)
 	}
 
@@ -266,7 +272,7 @@ func reorderArgs(args []string) []string {
 }
 
 func translateShortOptions(set *flag.FlagSet, flagArgs Args) []string {
-	allCharsFlags := func (s string) bool {
+	allCharsFlags := func(s string) bool {
 		for i := range s {
 			f := set.Lookup(string(s[i]))
 			if f == nil {

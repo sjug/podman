@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strconv"
 	"strings"
 
 	dockerarchive "github.com/containers/image/docker/archive"
@@ -12,6 +13,8 @@ import (
 	"github.com/containers/libpod/cmd/podman/libpodruntime"
 	image2 "github.com/containers/libpod/libpod/image"
 	"github.com/containers/libpod/pkg/util"
+	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
@@ -65,6 +68,9 @@ specified, the image with the 'latest' tag (if it exists) is pulled
 // to copy an image from a registry to a local machine
 func pullCmd(c *cli.Context) error {
 	forceSecure := false
+	span, _ := opentracing.StartSpanFromContext(c.Ctx, "pullCmd")
+	defer span.Finish()
+
 	runtime, err := libpodruntime.GetRuntime(c)
 	if err != nil {
 		return errors.Wrapf(err, "could not get runtime")
@@ -112,20 +118,27 @@ func pullCmd(c *cli.Context) error {
 		forceSecure = c.Bool("tls-verify")
 	}
 
+	span.LogFields(
+		log.String("image", image),
+		log.String("registryCreds", strconv.FormatBool(c.IsSet("creds"))),
+		log.String("tls-verify", strconv.FormatBool(forceSecure)),
+	)
+
+	origSpan := opentracing.SpanFromContext(c.Ctx)
 	// Possible for docker-archive to have multiple tags, so use LoadFromArchiveReference instead
 	if strings.HasPrefix(image, dockerarchive.Transport.Name()+":") {
 		srcRef, err := alltransports.ParseImageName(image)
 		if err != nil {
 			return errors.Wrapf(err, "error parsing %q", image)
 		}
-		newImage, err := runtime.ImageRuntime().LoadFromArchiveReference(getContext(), srcRef, c.String("signature-policy"), writer)
+		newImage, err := runtime.ImageRuntime().LoadFromArchiveReference(opentracing.ContextWithSpan(getContext(), origSpan), srcRef, c.String("signature-policy"), writer)
 		if err != nil {
 			return errors.Wrapf(err, "error pulling image from %q", image)
 		}
 		imgID = newImage[0].ID()
 	} else {
 		authfile := getAuthFile(c.String("authfile"))
-		newImage, err := runtime.ImageRuntime().New(getContext(), image, c.String("signature-policy"), authfile, writer, &dockerRegistryOptions, image2.SigningOptions{}, true, forceSecure)
+		newImage, err := runtime.ImageRuntime().New(opentracing.ContextWithSpan(getContext(), origSpan), image, c.String("signature-policy"), authfile, writer, &dockerRegistryOptions, image2.SigningOptions{}, true, forceSecure)
 		if err != nil {
 			return errors.Wrapf(err, "error pulling image %q", image)
 		}
