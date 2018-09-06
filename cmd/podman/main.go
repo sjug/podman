@@ -2,10 +2,14 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"runtime/pprof"
+	"runtime/trace"
 	"syscall"
+
+	"log/syslog"
 
 	"github.com/containers/libpod/pkg/hooks"
 	_ "github.com/containers/libpod/pkg/hooks/0.1.0"
@@ -16,7 +20,6 @@ import (
 	"github.com/sirupsen/logrus"
 	lsyslog "github.com/sirupsen/logrus/hooks/syslog"
 	"github.com/urfave/cli"
-	"log/syslog"
 )
 
 // This is populated by the Makefile from the VERSION file
@@ -51,6 +54,20 @@ func main() {
 	if reexec.Init() {
 		return
 	}
+	f, err := os.Create("/tmp/trace.out")
+	if err != nil {
+		log.Fatalf("failed to create trace output file: %v", err)
+	}
+	defer func() {
+		if err := f.Close(); err != nil {
+			log.Fatalf("failed to close trace file: %v", err)
+		}
+	}()
+
+	if err := trace.Start(f); err != nil {
+		log.Fatalf("failed to start trace: %v", err)
+	}
+	defer trace.Stop()
 
 	app := cli.NewApp()
 	app.Name = "podman"
