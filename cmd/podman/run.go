@@ -11,6 +11,7 @@ import (
 	"github.com/containers/libpod/cmd/podman/libpodruntime"
 	"github.com/containers/libpod/libpod"
 	"github.com/containers/libpod/pkg/rootless"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
@@ -37,6 +38,9 @@ var runCommand = cli.Command{
 }
 
 func runCmd(c *cli.Context) error {
+	span, _ := opentracing.StartSpanFromContext(c.Ctx, "runCmd")
+	defer span.Finish()
+
 	if err := createInit(c); err != nil {
 		return err
 	}
@@ -62,7 +66,9 @@ func runCmd(c *cli.Context) error {
 		}
 	}
 
-	ctx := getContext()
+	origSpan := opentracing.SpanFromContext(c.Ctx)
+	ctx := opentracing.ContextWithSpan(getContext(), origSpan)
+
 	// Handle detached start
 	if createConfig.Detach {
 		if err := ctr.Start(ctx); err != nil {

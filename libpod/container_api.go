@@ -14,6 +14,7 @@ import (
 	"github.com/containers/libpod/pkg/inspect"
 	"github.com/containers/storage/pkg/stringid"
 	"github.com/docker/docker/daemon/caps"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -73,6 +74,9 @@ func (c *Container) Init(ctx context.Context) (err error) {
 // Stopped containers will be deleted and re-created in runc, undergoing a fresh
 // Init()
 func (c *Container) Start(ctx context.Context) (err error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "containerStart")
+	defer span.Finish()
+
 	if !c.batched {
 		c.lock.Lock()
 		defer c.lock.Unlock()
