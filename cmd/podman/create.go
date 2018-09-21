@@ -25,6 +25,7 @@ import (
 	"github.com/docker/go-connections/nat"
 	"github.com/docker/go-units"
 	"github.com/opencontainers/selinux/go-selinux/label"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
@@ -107,8 +108,13 @@ func createInit(c *cli.Context) error {
 }
 
 func createContainer(c *cli.Context, runtime *libpod.Runtime) (*libpod.Container, *cc.CreateConfig, error) {
+	span, _ := opentracing.StartSpanFromContext(c.Ctx, "createContainer")
+	defer span.Finish()
+
 	rtc := runtime.GetConfig()
-	ctx := getContext()
+	origSpan := opentracing.SpanFromContext(c.Ctx)
+	ctx := opentracing.ContextWithSpan(getContext(), origSpan)
+
 	rootfs := ""
 	if c.Bool("rootfs") {
 		rootfs = c.Args()[0]

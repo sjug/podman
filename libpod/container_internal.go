@@ -25,6 +25,7 @@ import (
 	spec "github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/opencontainers/runtime-tools/generate"
 	"github.com/opencontainers/selinux/go-selinux/label"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/text/language"
@@ -173,6 +174,9 @@ func (c *Container) syncContainer() error {
 
 // Create container root filesystem for use
 func (c *Container) setupStorage(ctx context.Context) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "containerSetupStorage")
+	defer span.Finish()
+
 	if !c.valid {
 		return errors.Wrapf(ErrCtrRemoved, "container %s is not valid", c.ID())
 	}
@@ -506,6 +510,9 @@ func (c *Container) completeNetworkSetup() error {
 
 // Initialize a container, creating it in the runtime
 func (c *Container) init(ctx context.Context) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "containerInit")
+	defer span.Finish()
+
 	if err := c.makeBindMounts(); err != nil {
 		return err
 	}
@@ -541,6 +548,9 @@ func (c *Container) init(ctx context.Context) error {
 // Deletes and recreates a container in the runtime
 // Should only be done on ContainerStateStopped containers
 func (c *Container) reinit(ctx context.Context) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "containerReinit")
+	defer span.Finish()
+
 	logrus.Debugf("Recreating container %s in OCI runtime", c.ID())
 
 	// If necessary, delete attach and ctl files
@@ -851,6 +861,9 @@ func (c *Container) cleanup() error {
 // delete deletes the container and runs any configured poststop
 // hooks.
 func (c *Container) delete(ctx context.Context) (err error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "containerDelete")
+	defer span.Finish()
+
 	if err := c.runtime.ociRuntime.deleteContainer(c); err != nil {
 		return errors.Wrapf(err, "error removing container %s from runtime", c.ID())
 	}
