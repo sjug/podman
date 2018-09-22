@@ -182,7 +182,8 @@ func (c *Container) syncContainer() error {
 
 // Create container root filesystem for use
 func (c *Container) setupStorage(ctx context.Context) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "containerSetupStorage")
+	span, _ := opentracing.StartSpanFromContext(ctx, "setupStorage")
+	span.SetTag("struct", "container")
 	defer span.Finish()
 
 	if !c.valid {
@@ -519,6 +520,7 @@ func (c *Container) completeNetworkSetup() error {
 // Initialize a container, creating it in the runtime
 func (c *Container) init(ctx context.Context) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "containerInit")
+	span.SetTag("struct", "container")
 	defer span.Finish()
 
 	if err := c.makeBindMounts(); err != nil {
@@ -559,6 +561,7 @@ func (c *Container) init(ctx context.Context) error {
 // The container can be restarted cleanly after this.
 func (c *Container) cleanupRuntime(ctx context.Context) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "cleanupRuntime")
+	span.SetTag("struct", "container")
 	defer span.Finish()
 
 	// If the container is not ContainerStateStopped, do nothing

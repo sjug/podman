@@ -28,6 +28,9 @@ func GetRuntime(c *cli.Context) (*libpod.Runtime, error) {
 
 // GetContainerRuntime generates a new libpod runtime configured by command line options for containers
 func GetContainerRuntime(c *cli.Context) (*libpod.Runtime, error) {
+	span, _ := opentracing.StartSpanFromContext(c.Ctx, "getContainerRuntime")
+	defer span.Finish()
+
 	mappings, err := util.ParseIDMapping(c.StringSlice("uidmap"), c.StringSlice("gidmap"), c.String("subuidmap"), c.String("subgidmap"))
 	if err != nil {
 		return nil, err
@@ -88,6 +91,9 @@ func GetDefaultStoreOptions() (storage.StoreOptions, error) {
 
 // GetRuntime generates a new libpod runtime configured by command line options
 func GetRuntimeWithStorageOpts(c *cli.Context, storageOpts *storage.StoreOptions) (*libpod.Runtime, error) {
+	span, _ := opentracing.StartSpanFromContext(c.Ctx, "getRuntimeWithStorageOpts")
+	defer span.Finish()
+
 	options := []libpod.RuntimeOption{}
 
 	if c.GlobalIsSet("root") {
