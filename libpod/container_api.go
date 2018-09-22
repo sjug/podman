@@ -74,6 +74,7 @@ func (c *Container) Init(ctx context.Context) (err error) {
 // Init()
 func (c *Container) Start(ctx context.Context) (err error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "containerStart")
+	span.SetTag("struct", "container")
 	defer span.Finish()
 
 	if !c.batched {
@@ -83,6 +84,7 @@ func (c *Container) Start(ctx context.Context) (err error) {
 		if err := c.syncContainer(); err != nil {
 			return err
 		}
+		span.LogKV("event", "container-sync")
 	}
 
 	// Container must be created or stopped to be started
@@ -104,6 +106,7 @@ func (c *Container) Start(ctx context.Context) (err error) {
 	if err := c.prepare(); err != nil {
 		return err
 	}
+	span.LogKV("event", "container-prepare")
 	defer func() {
 		if err != nil {
 			if err2 := c.cleanup(); err2 != nil {

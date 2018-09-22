@@ -44,6 +44,7 @@ func (r *Runtime) NewContainer(ctx context.Context, rSpec *spec.Spec, options ..
 
 func (r *Runtime) newContainer(ctx context.Context, rSpec *spec.Spec, options ...CtrCreateOption) (c *Container, err error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "newContainer")
+	span.SetTag("struct", "runtime")
 	defer span.Finish()
 
 	if rSpec == nil {

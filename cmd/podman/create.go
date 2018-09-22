@@ -78,6 +78,9 @@ func createCmd(c *cli.Context) error {
 }
 
 func createInit(c *cli.Context) error {
+	span, _ := opentracing.StartSpanFromContext(c.Ctx, "createInit")
+	defer span.Finish()
+
 	// TODO should allow user to create based off a directory on the host not just image
 	// Need CLI support for this
 

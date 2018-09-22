@@ -174,7 +174,8 @@ func (c *Container) syncContainer() error {
 
 // Create container root filesystem for use
 func (c *Container) setupStorage(ctx context.Context) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "containerSetupStorage")
+	span, _ := opentracing.StartSpanFromContext(ctx, "setupStorage")
+	span.SetTag("struct", "container")
 	defer span.Finish()
 
 	if !c.valid {
@@ -511,6 +512,7 @@ func (c *Container) completeNetworkSetup() error {
 // Initialize a container, creating it in the runtime
 func (c *Container) init(ctx context.Context) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "containerInit")
+	span.SetTag("struct", "container")
 	defer span.Finish()
 
 	if err := c.makeBindMounts(); err != nil {
@@ -549,6 +551,7 @@ func (c *Container) init(ctx context.Context) error {
 // Should only be done on ContainerStateStopped containers
 func (c *Container) reinit(ctx context.Context) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "containerReinit")
+	span.SetTag("struct", "container")
 	defer span.Finish()
 
 	logrus.Debugf("Recreating container %s in OCI runtime", c.ID())
