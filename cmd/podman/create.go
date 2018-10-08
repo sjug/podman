@@ -154,11 +154,13 @@ func createContainer(c *cli.Context, runtime *libpod.Runtime) (*libpod.Container
 		return nil, nil, err
 	}
 
+	origSpan.LogKV("event", "beforeContainerCreateOptions")
 	options, err := createConfig.GetContainerCreateOptions(runtime)
 	if err != nil {
 		return nil, nil, err
 	}
 
+	origSpan.LogKV("event", "afterContainerCreateOptions")
 	became, ret, err := joinOrCreateRootlessUserNamespace(createConfig, runtime)
 	if err != nil {
 		return nil, nil, err
