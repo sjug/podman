@@ -266,6 +266,8 @@ func psCmd(c *cli.Context) error {
 		}
 	}
 
+	span.LogKV("event", "filtersCompleted")
+
 	var outputContainers []*libpod.Container
 
 	if !opts.Latest {
@@ -292,7 +294,9 @@ func psCmd(c *cli.Context) error {
 		outputContainers = []*libpod.Container{latestCtr}
 	}
 
-	return generatePsOutput(outputContainers, opts)
+	span.LogKV("event", "getContainersCompleted")
+
+	return generatePsOutput(c, outputContainers, opts)
 }
 
 // checkFlagsPassed checks if mutually exclusive flags are passed together
@@ -650,7 +654,10 @@ func getAndSortJSONParams(containers []*libpod.Container, opts shared.PsOptions)
 	return sortPsOutput(opts.Sort, psOutput)
 }
 
-func generatePsOutput(containers []*libpod.Container, opts shared.PsOptions) error {
+func generatePsOutput(c *cli.Context, containers []*libpod.Container, opts shared.PsOptions) error {
+	span, _ := opentracing.StartSpanFromContext(c.Ctx, "generatePsOutput")
+	defer span.Finish()
+
 	if len(containers) == 0 && opts.Format != formats.JSONString {
 		return nil
 	}
@@ -658,6 +665,8 @@ func generatePsOutput(containers []*libpod.Container, opts shared.PsOptions) err
 	if err != nil {
 		return err
 	}
+
+	span.LogKV("event", "getAndSortJSONParamsCompleted")
 	var out formats.Writer
 
 	switch opts.Format {
@@ -673,6 +682,7 @@ func generatePsOutput(containers []*libpod.Container, opts shared.PsOptions) err
 		}
 		out = formats.StdoutTemplateArray{Output: psToGeneric(psOutput, []psJSONParams{}), Template: opts.Format, Fields: psOutput[0].headerMap()}
 	}
+	span.LogKV("event", "optsSwitchCompleted")
 
 	return formats.Writer(out).Out()
 }

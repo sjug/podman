@@ -8,6 +8,7 @@ import (
 	"github.com/containers/libpod/cmd/podman/libpodruntime"
 	"github.com/containers/libpod/libpod"
 	"github.com/containers/libpod/pkg/rootless"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"github.com/urfave/cli"
 )
@@ -44,6 +45,9 @@ var (
 )
 
 func stopCmd(c *cli.Context) error {
+	span, _ := opentracing.StartSpanFromContext(c.Ctx, "stopCmd")
+	defer span.Finish()
+
 	args := c.Args()
 	if (c.Bool("all") || c.Bool("latest")) && len(args) > 0 {
 		return errors.Errorf("no arguments are needed with --all or --latest")
