@@ -14,6 +14,7 @@ import (
 	"github.com/containers/image/types"
 	"github.com/containers/storage/pkg/stringid"
 	ociv1 "github.com/opencontainers/image-spec/specs-go/v1"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
@@ -50,6 +51,10 @@ func unmarshalConvertedConfig(ctx context.Context, dest interface{}, img types.I
 }
 
 func (b *Builder) initConfig(ctx context.Context, img types.Image) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "initConfig")
+	span.SetTag("ref", "buildah")
+	defer span.Finish()
+
 	if img != nil { // A pre-existing image, as opposed to a "FROM scratch" new one.
 		rawManifest, manifestMIMEType, err := img.Manifest(ctx)
 		if err != nil {

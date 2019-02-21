@@ -20,6 +20,7 @@ import (
 	"github.com/containers/image/types"
 	"github.com/containers/storage"
 	"github.com/hashicorp/go-multierror"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
@@ -58,6 +59,10 @@ type PullOptions struct {
 }
 
 func localImageNameForReference(ctx context.Context, store storage.Store, srcRef types.ImageReference, spec string) (string, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "localImageNameForReference")
+	span.SetTag("ref", "buildah")
+	defer span.Finish()
+
 	if srcRef == nil {
 		return "", errors.Errorf("reference to image is empty")
 	}
@@ -212,6 +217,10 @@ func Pull(ctx context.Context, imageName string, options PullOptions) error {
 }
 
 func pullImage(ctx context.Context, store storage.Store, imageName string, options PullOptions, sc *types.SystemContext) (types.ImageReference, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "pullImage")
+	span.SetTag("ref", "buildah")
+	defer span.Finish()
+
 	spec := imageName
 	srcRef, err := alltransports.ParseImageName(spec)
 	if err != nil {

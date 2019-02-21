@@ -14,6 +14,7 @@ import (
 	"github.com/containers/image/types"
 	"github.com/containers/storage"
 	"github.com/openshift/imagebuilder"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
@@ -29,6 +30,10 @@ const (
 )
 
 func pullAndFindImage(ctx context.Context, store storage.Store, imageName string, options BuilderOptions, sc *types.SystemContext) (*storage.Image, types.ImageReference, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "pullAndFindImage")
+	span.SetTag("ref", "buildah")
+	defer span.Finish()
+
 	pullOptions := PullOptions{
 		ReportWriter:  options.ReportWriter,
 		Store:         store,
@@ -102,6 +107,10 @@ func newContainerIDMappingOptions(idmapOptions *IDMappingOptions) storage.IDMapp
 }
 
 func resolveImage(ctx context.Context, systemContext *types.SystemContext, store storage.Store, options BuilderOptions) (types.ImageReference, *storage.Image, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "resolveImage")
+	span.SetTag("ref", "buildah")
+	defer span.Finish()
+
 	type failure struct {
 		resolvedImageName string
 		err               error
@@ -250,6 +259,10 @@ func findUnusedContainer(name string, containers []storage.Container) string {
 }
 
 func newBuilder(ctx context.Context, store storage.Store, options BuilderOptions) (*Builder, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "newBuilder")
+	span.SetTag("ref", "buildah")
+	defer span.Finish()
+
 	var ref types.ImageReference
 	var img *storage.Image
 	var err error
