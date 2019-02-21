@@ -3,12 +3,14 @@ package libpod
 import (
 	"context"
 	"fmt"
-	"github.com/opencontainers/image-spec/specs-go/v1"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
+
+	"github.com/opencontainers/image-spec/specs-go/v1"
+	opentracing "github.com/opentracing/opentracing-go"
 
 	"github.com/containers/buildah/imagebuildah"
 	"github.com/containers/libpod/libpod/image"
@@ -136,6 +138,9 @@ func removeStorageContainers(ctrIDs []string, store storage.Store) error {
 
 // Build adds the runtime to the imagebuildah call
 func (r *Runtime) Build(ctx context.Context, options imagebuildah.BuildOptions, dockerfiles ...string) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "buildImageBuildah")
+	defer span.Finish()
+
 	_, _, err := imagebuildah.BuildDockerfiles(ctx, r.store, options, dockerfiles...)
 	return err
 }

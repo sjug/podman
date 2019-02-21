@@ -11,6 +11,7 @@ import (
 	"github.com/containers/libpod/cmd/podman/cliconfig"
 	"github.com/containers/libpod/libpod/adapter"
 	"github.com/docker/go-units"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -74,6 +75,11 @@ func getDockerfiles(files []string) []string {
 }
 
 func buildCmd(c *cliconfig.BuildValues) error {
+	if c.Bool("trace") {
+		span, _ := opentracing.StartSpanFromContext(Ctx, "buildCmd")
+		defer span.Finish()
+	}
+
 	// The following was taken directly from containers/buildah/cmd/bud.go
 	// TODO Find a away to vendor more of this in rather than copy from bud
 	output := ""
@@ -178,6 +184,8 @@ func buildCmd(c *cliconfig.BuildValues) error {
 		return errors.Wrapf(err, "could not get runtime")
 	}
 
+	span.LogKV("event", "GetRuntimeCompleted")
+
 	runtimeFlags := []string{}
 	for _, arg := range c.RuntimeOpts {
 		runtimeFlags = append(runtimeFlags, "--"+arg)
@@ -259,6 +267,9 @@ func buildCmd(c *cliconfig.BuildValues) error {
 		SignaturePolicyPath:     c.SignaturePolicy,
 		Squash:                  c.Squash,
 	}
+
+	span.LogKV("event", "KickBuild")
+
 	return runtime.Build(getContext(), c, options, dockerfiles)
 }
 

@@ -19,6 +19,7 @@ import (
 	"github.com/containers/libpod/libpod"
 	"github.com/containers/libpod/libpod/image"
 	"github.com/containers/libpod/pkg/rootless"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 )
 
@@ -260,6 +261,11 @@ func libpodVolumeToVolume(volumes []*libpod.Volume) []*Volume {
 
 // Build is the wrapper to build images
 func (r *LocalRuntime) Build(ctx context.Context, c *cliconfig.BuildValues, options imagebuildah.BuildOptions, dockerfiles []string) error {
+	if c.Bool("trace") {
+		span, _ := opentracing.StartSpanFromContext(ctx, "buildAdapter")
+		defer span.Finish()
+	}
+
 	namespaceOptions, networkPolicy, err := parse.NamespaceOptions(c.PodmanCommand.Command)
 	if err != nil {
 		return errors.Wrapf(err, "error parsing namespace-related options")
