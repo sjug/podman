@@ -9,7 +9,7 @@ github.com/Microsoft/go-winio/backuptar
 github.com/Microsoft/go-winio/pkg/guid
 github.com/Microsoft/go-winio/pkg/security
 github.com/Microsoft/go-winio/vhd
-# github.com/Microsoft/hcsshim v0.8.15
+# github.com/Microsoft/hcsshim v0.8.16
 github.com/Microsoft/hcsshim
 github.com/Microsoft/hcsshim/computestorage
 github.com/Microsoft/hcsshim/internal/cow
@@ -49,9 +49,9 @@ github.com/checkpoint-restore/go-criu
 github.com/checkpoint-restore/go-criu/rpc
 # github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e
 github.com/chzyer/readline
-# github.com/containerd/cgroups v0.0.0-20200824123100-0b889c03f102
+# github.com/containerd/cgroups v0.0.0-20210114181951-8a68de567b68
 github.com/containerd/cgroups/stats/v1
-# github.com/containerd/containerd v1.5.0-beta.1
+# github.com/containerd/containerd v1.5.0-beta.4
 github.com/containerd/containerd/errdefs
 github.com/containerd/containerd/log
 github.com/containerd/containerd/platforms
@@ -74,7 +74,7 @@ github.com/containernetworking/plugins/pkg/utils/hwaddr
 github.com/containernetworking/plugins/pkg/utils/sysctl
 github.com/containernetworking/plugins/plugins/ipam/host-local/backend
 github.com/containernetworking/plugins/plugins/ipam/host-local/backend/allocator
-# github.com/containers/buildah v1.20.0
+# github.com/containers/buildah v1.20.1-0.20210402144408-36a37402d0c8
 github.com/containers/buildah
 github.com/containers/buildah/bind
 github.com/containers/buildah/chroot
@@ -93,7 +93,7 @@ github.com/containers/buildah/pkg/parse
 github.com/containers/buildah/pkg/rusage
 github.com/containers/buildah/pkg/supplemented
 github.com/containers/buildah/util
-# github.com/containers/common v0.35.4
+# github.com/containers/common v0.36.0
 github.com/containers/common/pkg/apparmor
 github.com/containers/common/pkg/apparmor/internal/supported
 github.com/containers/common/pkg/auth
@@ -115,7 +115,7 @@ github.com/containers/common/pkg/umask
 github.com/containers/common/version
 # github.com/containers/conmon v2.0.20+incompatible
 github.com/containers/conmon/runner/config
-# github.com/containers/image/v5 v5.10.5
+# github.com/containers/image/v5 v5.11.0
 github.com/containers/image/v5/copy
 github.com/containers/image/v5/directory
 github.com/containers/image/v5/directory/explicitfilepath
@@ -133,6 +133,7 @@ github.com/containers/image/v5/internal/pkg/keyctl
 github.com/containers/image/v5/internal/pkg/platform
 github.com/containers/image/v5/internal/rootless
 github.com/containers/image/v5/internal/tmpdir
+github.com/containers/image/v5/internal/types
 github.com/containers/image/v5/internal/uploadreader
 github.com/containers/image/v5/manifest
 github.com/containers/image/v5/oci/archive
@@ -162,7 +163,7 @@ github.com/containers/image/v5/types
 github.com/containers/image/v5/version
 # github.com/containers/libtrust v0.0.0-20190913040956-14b96171aa3b
 github.com/containers/libtrust
-# github.com/containers/ocicrypt v1.1.0
+# github.com/containers/ocicrypt v1.1.1
 github.com/containers/ocicrypt
 github.com/containers/ocicrypt/blockcipher
 github.com/containers/ocicrypt/config
@@ -187,7 +188,7 @@ github.com/containers/psgo/internal/dev
 github.com/containers/psgo/internal/host
 github.com/containers/psgo/internal/proc
 github.com/containers/psgo/internal/process
-# github.com/containers/storage v1.28.1
+# github.com/containers/storage v1.29.0
 github.com/containers/storage
 github.com/containers/storage/drivers
 github.com/containers/storage/drivers/aufs
@@ -233,7 +234,7 @@ github.com/containers/storage/types
 github.com/coreos/go-iptables/iptables
 # github.com/coreos/go-systemd v0.0.0-20190321100706-95778dfbb74e
 github.com/coreos/go-systemd/activation
-# github.com/coreos/go-systemd/v22 v22.3.0
+# github.com/coreos/go-systemd/v22 v22.3.1
 github.com/coreos/go-systemd/v22/activation
 github.com/coreos/go-systemd/v22/daemon
 github.com/coreos/go-systemd/v22/dbus
@@ -325,9 +326,11 @@ github.com/fsnotify/fsnotify
 github.com/fsouza/go-dockerclient
 # github.com/ghodss/yaml v1.0.0
 github.com/ghodss/yaml
-# github.com/go-logr/logr v0.2.0
+# github.com/go-logr/logr v0.4.0
 github.com/go-logr/logr
-# github.com/godbus/dbus/v5 v5.0.3
+# github.com/go-task/slim-sprig v0.0.0-20210107165309-348f09dbbbc0
+github.com/go-task/slim-sprig
+# github.com/godbus/dbus/v5 v5.0.4
 github.com/godbus/dbus/v5
 # github.com/gogo/protobuf v1.3.2
 github.com/gogo/protobuf/gogoproto
@@ -342,6 +345,14 @@ github.com/golang/protobuf/ptypes
 github.com/golang/protobuf/ptypes/any
 github.com/golang/protobuf/ptypes/duration
 github.com/golang/protobuf/ptypes/timestamp
+# github.com/google/go-cmp v0.5.5
+github.com/google/go-cmp/cmp
+github.com/google/go-cmp/cmp/internal/diff
+github.com/google/go-cmp/cmp/internal/flags
+github.com/google/go-cmp/cmp/internal/function
+github.com/google/go-cmp/cmp/internal/value
+# github.com/google/go-intervals v0.0.2
+github.com/google/go-intervals/intervalset
 # github.com/google/gofuzz v1.1.0
 github.com/google/gofuzz
 # github.com/google/shlex v0.0.0-20181106134648-c34317bd91bf
@@ -373,7 +384,7 @@ github.com/json-iterator/go
 # github.com/juju/ansiterm v0.0.0-20180109212912-720a0952cc2a
 github.com/juju/ansiterm
 github.com/juju/ansiterm/tabwriter
-# github.com/klauspost/compress v1.11.12
+# github.com/klauspost/compress v1.11.13
 github.com/klauspost/compress/flate
 github.com/klauspost/compress/fse
 github.com/klauspost/compress/huff0
@@ -425,10 +436,11 @@ github.com/nxadm/tail/ratelimiter
 github.com/nxadm/tail/util
 github.com/nxadm/tail/watch
 github.com/nxadm/tail/winfile
-# github.com/onsi/ginkgo v1.15.2
+# github.com/onsi/ginkgo v1.16.1
 github.com/onsi/ginkgo
 github.com/onsi/ginkgo/config
 github.com/onsi/ginkgo/extensions/table
+github.com/onsi/ginkgo/formatter
 github.com/onsi/ginkgo/ginkgo
 github.com/onsi/ginkgo/ginkgo/convert
 github.com/onsi/ginkgo/ginkgo/interrupthandler
@@ -530,7 +542,7 @@ github.com/prometheus/procfs/internal/fs
 github.com/prometheus/procfs/internal/util
 # github.com/rivo/uniseg v0.2.0
 github.com/rivo/uniseg
-# github.com/rootless-containers/rootlesskit v0.14.0
+# github.com/rootless-containers/rootlesskit v0.14.2
 github.com/rootless-containers/rootlesskit/pkg/api
 github.com/rootless-containers/rootlesskit/pkg/msgutil
 github.com/rootless-containers/rootlesskit/pkg/port
@@ -563,7 +575,7 @@ github.com/stretchr/testify/require
 github.com/syndtr/gocapability/capability
 # github.com/tchap/go-patricia v2.3.0+incompatible
 github.com/tchap/go-patricia/patricia
-# github.com/uber/jaeger-client-go v2.25.0+incompatible
+# github.com/uber/jaeger-client-go v2.26.0+incompatible
 github.com/uber/jaeger-client-go/log
 github.com/uber/jaeger-client-go/thrift
 github.com/uber/jaeger-client-go/thrift-gen/agent
@@ -579,11 +591,6 @@ github.com/ulikunitz/xz/lzma
 github.com/vbatts/tar-split/archive/tar
 github.com/vbatts/tar-split/tar/asm
 github.com/vbatts/tar-split/tar/storage
-# github.com/vbauerster/mpb/v5 v5.4.0
-github.com/vbauerster/mpb/v5
-github.com/vbauerster/mpb/v5/cwriter
-github.com/vbauerster/mpb/v5/decor
-github.com/vbauerster/mpb/v5/internal
 # github.com/vbauerster/mpb/v6 v6.0.3
 github.com/vbauerster/mpb/v6
 github.com/vbauerster/mpb/v6/cwriter
@@ -612,7 +619,7 @@ go.opencensus.io/internal
 go.opencensus.io/trace
 go.opencensus.io/trace/internal
 go.opencensus.io/trace/tracestate
-# golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad
+# golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2
 golang.org/x/crypto/blowfish
 golang.org/x/crypto/cast5
 golang.org/x/crypto/chacha20
@@ -633,7 +640,7 @@ golang.org/x/crypto/ssh/agent
 golang.org/x/crypto/ssh/internal/bcrypt_pbkdf
 golang.org/x/crypto/ssh/knownhosts
 golang.org/x/crypto/ssh/terminal
-# golang.org/x/net v0.0.0-20210119194325-5f4716e94777
+# golang.org/x/net v0.0.0-20210226172049-e18ecbb05110
 golang.org/x/net/context
 golang.org/x/net/html
 golang.org/x/net/html/atom
@@ -768,10 +775,10 @@ gopkg.in/tomb.v1
 gopkg.in/yaml.v2
 # gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776
 gopkg.in/yaml.v3
-# k8s.io/api v0.20.5
+# k8s.io/api v0.21.0
 k8s.io/api/apps/v1
 k8s.io/api/core/v1
-# k8s.io/apimachinery v0.20.5
+# k8s.io/apimachinery v0.21.0
 k8s.io/apimachinery/pkg/api/resource
 k8s.io/apimachinery/pkg/apis/meta/v1
 k8s.io/apimachinery/pkg/conversion
@@ -793,7 +800,7 @@ k8s.io/apimachinery/pkg/util/validation
 k8s.io/apimachinery/pkg/util/validation/field
 k8s.io/apimachinery/pkg/watch
 k8s.io/apimachinery/third_party/forked/golang/reflect
-# k8s.io/klog/v2 v2.4.0
+# k8s.io/klog/v2 v2.8.0
 k8s.io/klog/v2
-# sigs.k8s.io/structured-merge-diff/v4 v4.0.2
+# sigs.k8s.io/structured-merge-diff/v4 v4.1.0
 sigs.k8s.io/structured-merge-diff/v4/value
